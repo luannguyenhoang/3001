@@ -277,16 +277,16 @@ export default function Home() {
       {/* Scan Message Toast */}
       {scanMessage && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full mx-4">
-          <div className={`rounded-lg shadow-lg p-4 ${scanMessage.type === 'success'
-            ? 'bg-green-500 text-white'
-            : 'bg-red-500 text-white'
-            } flex items-center justify-between animate-slide-down`}>
+          <div className={`rounded-lg shadow-lg p-4 flex items-center justify-between ${scanMessage.type === 'success'
+              ? 'bg-green-500 text-white'
+              : 'bg-red-500 text-white'
+            }`}>
             <span className="font-medium">{scanMessage.text}</span>
             <button
               onClick={() => setScanMessage(null)}
-              className="ml-4 text-white hover:text-gray-200"
+              className="ml-4 text-white hover:text-gray-200 text-xl"
             >
-              ✕
+              ×
             </button>
           </div>
         </div>

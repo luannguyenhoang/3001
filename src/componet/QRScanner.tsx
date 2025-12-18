@@ -35,7 +35,20 @@ export default function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
                             setSuccess(true);
                             setScanning(false);
                             html5QrCode.stop().then(() => {
-                                onScanSuccess(decodedText);
+                                // Small delay to ensure camera is fully released
+                                setTimeout(() => {
+                                    if (isMounted) {
+                                        onScanSuccess(decodedText);
+                                    }
+                                }, 300);
+                            }).catch((err) => {
+                                console.error("Scanner stop error:", err);
+                                // Still call the callback even if stop fails
+                                setTimeout(() => {
+                                    if (isMounted) {
+                                        onScanSuccess(decodedText);
+                                    }
+                                }, 300);
                             });
                         }
                     },
@@ -59,14 +72,26 @@ export default function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
         return () => {
             isMounted = false;
             if (scannerRef.current) {
-                scannerRef.current.stop().catch(() => { });
+                try {
+                    scannerRef.current.stop().catch((err) => {
+                        console.log("Scanner stop error (ignorable):", err);
+                    });
+                } catch (err) {
+                    console.log("Scanner cleanup error (ignorable):", err);
+                }
             }
         };
     }, [onScanSuccess]);
 
     const handleClose = () => {
         if (scannerRef.current) {
-            scannerRef.current.stop().catch(() => { });
+            try {
+                scannerRef.current.stop().catch((err) => {
+                    console.log("Scanner close error (ignorable):", err);
+                });
+            } catch (err) {
+                console.log("Scanner stop error (ignorable):", err);
+            }
         }
         onClose();
     };
