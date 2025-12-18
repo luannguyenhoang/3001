@@ -38,7 +38,7 @@ export default function Page() {
           grant_type: "authorization_code",
           client_id: "ome_ecm",
           code,
-          redirect_uri: "http://localhost:3001",
+          redirect_uri: "https://daihan.vercel.app",
         }),
       })
 
