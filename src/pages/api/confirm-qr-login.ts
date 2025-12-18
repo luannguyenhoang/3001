@@ -7,7 +7,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const { sessionId, accessToken, confirmUrl } = req.body;
 
+    console.log("🔔 [API] confirm-qr-login called");
+    console.log("📋 [API] Session ID:", sessionId);
+    console.log("🌐 [API] Confirm URL:", confirmUrl);
+    console.log("🔑 [API] Access token length:", accessToken?.length || 0);
+
     if (!sessionId || !accessToken || !confirmUrl) {
+        console.error("❌ [API] Missing required fields");
         return res.status(400).json({
             status: false,
             error: "Session ID, access token, and confirm URL are required",
@@ -16,6 +22,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     try {
         // Forward the access token to san app's API
+        console.log("📡 [API] Sending PUT request to:", confirmUrl);
+        console.log("📦 [API] Request body:", { sessionId, accessTokenLength: accessToken.length });
+
         const response = await fetch(confirmUrl, {
             method: "PUT",
             headers: {
@@ -27,22 +36,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }),
         });
 
+        console.log("📥 [API] Response status:", response.status, response.statusText);
+
         const data = await response.json();
+        console.log("📄 [API] Response data:", data);
 
         if (!response.ok || !data.status) {
+            console.error("❌ [API] Request failed");
             return res.status(response.status).json({
                 status: false,
                 error: data.error || "Failed to confirm login",
             });
         }
 
+        console.log("✅ [API] Login confirmed successfully");
         return res.status(200).json({
             status: true,
             message: "Login confirmed successfully",
         });
     } catch (err) {
         const error = err as Error;
-        console.error("Error confirming QR login:", error);
+        console.error("❌ [API] Exception occurred:", {
+            message: error.message,
+            name: error.name,
+            stack: error.stack?.substring(0, 300)
+        });
         return res.status(500).json({
             status: false,
             error: "Failed to confirm login: " + error.message,

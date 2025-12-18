@@ -57,22 +57,32 @@ export default function Home() {
 
   const handleQRScan = async (scannedData: string) => {
     try {
+      console.log("🔍 [QR SCAN] Raw scanned data:", scannedData);
+
       const qrPayload = JSON.parse(scannedData)
+      console.log("📦 [QR SCAN] Parsed payload:", qrPayload);
 
       if (qrPayload.type !== "qr_login" || !qrPayload.sessionId || !qrPayload.confirmUrl) {
-        alert("❌ Mã QR không hợp lệ")
+        console.error("❌ [QR SCAN] Invalid QR payload");
+        alert(`❌ Mã QR không hợp lệ\n\nType: ${qrPayload.type}\nSession: ${qrPayload.sessionId}\nURL: ${qrPayload.confirmUrl}`)
         setShowQRScanner(false)
         return
       }
 
       const accessToken = localStorage.getItem("access_token")
       if (!accessToken) {
+        console.error("❌ [QR SCAN] No access token found");
         alert("❌ Không tìm thấy token đăng nhập")
         setShowQRScanner(false)
         return
       }
 
+      console.log("🔑 [QR SCAN] Access token found (length):", accessToken.length);
+      console.log("🌐 [QR SCAN] Confirm URL:", qrPayload.confirmUrl);
+      console.log("🎫 [QR SCAN] Session ID:", qrPayload.sessionId);
+
       // Confirm login by sending access token to san app
+      console.log("📡 [QR SCAN] Sending confirmation request to /api/confirm-qr-login...");
       const res = await fetch("/api/confirm-qr-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -83,19 +93,27 @@ export default function Home() {
         }),
       })
 
+      console.log("📥 [QR SCAN] API response status:", res.status, res.statusText);
+
       const data = await res.json()
+      console.log("📄 [QR SCAN] API response data:", data);
 
       if (!res.ok || !data.status) {
-        alert("❌ Xác nhận đăng nhập thất bại: " + (data.error || "Unknown error"))
+        const errorMsg = `Status: ${res.status}\nError: ${data.error || "Unknown error"}\n\nConfirm URL: ${qrPayload.confirmUrl}`;
+        console.error("❌ [QR SCAN] Login confirmation failed:", errorMsg);
+        alert(`❌ Xác nhận đăng nhập thất bại:\n\n${errorMsg}`)
         setShowQRScanner(false)
         return
       }
 
+      console.log("✅ [QR SCAN] Login confirmed successfully!");
       alert("✅ Xác nhận đăng nhập thành công!")
       setShowQRScanner(false)
     } catch (err) {
       const error = err as Error;
-      alert("❌ Lỗi khi quét mã QR: " + error.message)
+      const errorDetails = `Message: ${error.message}\nName: ${error.name}\nStack: ${error.stack?.substring(0, 200)}`;
+      console.error("❌ [QR SCAN] Exception:", errorDetails);
+      alert(`❌ Lỗi khi quét mã QR:\n\n${errorDetails}`)
       setShowQRScanner(false)
     }
   }
