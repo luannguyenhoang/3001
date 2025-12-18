@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Html5Qrcode, Html5QrcodeScanner } from "html5-qrcode";
+import { Html5Qrcode } from "html5-qrcode";
 import { Camera, X, CheckCircle, AlertCircle } from "lucide-react";
 
 interface QRScannerProps {
@@ -43,10 +43,11 @@ export default function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
                         // QR code not found - this is called frequently, ignore
                     }
                 );
-            } catch (err: any) {
+            } catch (err) {
                 if (isMounted) {
+                    const error = err as Error;
                     setError(
-                        err.message || "Không thể truy cập camera. Vui lòng cấp quyền camera."
+                        error.message || "Không thể truy cập camera. Vui lòng cấp quyền camera."
                     );
                     setScanning(false);
                 }

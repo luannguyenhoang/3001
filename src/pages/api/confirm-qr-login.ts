@@ -40,7 +40,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             status: true,
             message: "Login confirmed successfully",
         });
-    } catch (error: any) {
+    } catch (err) {
+        const error = err as Error;
         console.error("Error confirming QR login:", error);
         return res.status(500).json({
             status: false,

@@ -93,8 +93,9 @@ export default function Home() {
 
       alert("✅ Xác nhận đăng nhập thành công!")
       setShowQRScanner(false)
-    } catch (err: any) {
-      alert("❌ Lỗi khi quét mã QR: " + err.message)
+    } catch (err) {
+      const error = err as Error;
+      alert("❌ Lỗi khi quét mã QR: " + error.message)
       setShowQRScanner(false)
     }
   }
