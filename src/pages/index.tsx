@@ -12,12 +12,23 @@ export default function Home() {
   const { userInfo, logout, loadingUser } = useContext(AuthContext)
   const router = useRouter()
   const [showQRScanner, setShowQRScanner] = useState(false)
+  const [scanMessage, setScanMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   useEffect(() => {
     if (!loadingUser && !userInfo) {
       router.push("/login")
     }
   }, [loadingUser, userInfo, router])
+
+  // Auto-dismiss scan message after 5 seconds
+  useEffect(() => {
+    if (scanMessage) {
+      const timer = setTimeout(() => {
+        setScanMessage(null)
+      }, 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [scanMessage])
 
   if (loadingUser) {
     return (
@@ -64,7 +75,7 @@ export default function Home() {
 
       if (qrPayload.type !== "qr_login" || !qrPayload.sessionId || !qrPayload.confirmUrl) {
         console.error("❌ [QR SCAN] Invalid QR payload");
-        alert(`❌ Mã QR không hợp lệ\n\nType: ${qrPayload.type}\nSession: ${qrPayload.sessionId}\nURL: ${qrPayload.confirmUrl}`)
+        setScanMessage({ type: 'error', text: 'Mã QR không hợp lệ' });
         setShowQRScanner(false)
         return
       }
@@ -72,7 +83,7 @@ export default function Home() {
       const accessToken = localStorage.getItem("access_token")
       if (!accessToken) {
         console.error("❌ [QR SCAN] No access token found");
-        alert("❌ Không tìm thấy token đăng nhập")
+        setScanMessage({ type: 'error', text: 'Không tìm thấy token đăng nhập' });
         setShowQRScanner(false)
         return
       }
@@ -99,21 +110,21 @@ export default function Home() {
       console.log("📄 [QR SCAN] API response data:", data);
 
       if (!res.ok || !data.status) {
-        const errorMsg = `Status: ${res.status}\nError: ${data.error || "Unknown error"}\n\nConfirm URL: ${qrPayload.confirmUrl}`;
+        const errorMsg = `Status: ${res.status}\nError: ${data.error || "Unknown error"}`;
         console.error("❌ [QR SCAN] Login confirmation failed:", errorMsg);
-        alert(`❌ Xác nhận đăng nhập thất bại:\n\n${errorMsg}`)
+        setScanMessage({ type: 'error', text: `Xác nhận đăng nhập thất bại: ${data.error || "Unknown error"}` });
         setShowQRScanner(false)
         return
       }
 
       console.log("✅ [QR SCAN] Login confirmed successfully!");
-      alert("✅ Xác nhận đăng nhập thành công!")
+      setScanMessage({ type: 'success', text: 'Xác nhận đăng nhập thành công!' });
       setShowQRScanner(false)
     } catch (err) {
       const error = err as Error;
-      const errorDetails = `Message: ${error.message}\nName: ${error.name}\nStack: ${error.stack?.substring(0, 200)}`;
-      console.error("❌ [QR SCAN] Exception:", errorDetails);
-      alert(`❌ Lỗi khi quét mã QR:\n\n${errorDetails}`)
+      const errorDetails = `${error.message}`;
+      console.error("❌ [QR SCAN] Exception:", error);
+      setScanMessage({ type: 'error', text: `Lỗi: ${errorDetails}` });
       setShowQRScanner(false)
     }
   }
@@ -261,6 +272,24 @@ export default function Home() {
           onScanSuccess={handleQRScan}
           onClose={() => setShowQRScanner(false)}
         />
+      )}
+
+      {/* Scan Message Toast */}
+      {scanMessage && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full mx-4">
+          <div className={`rounded-lg shadow-lg p-4 ${scanMessage.type === 'success'
+            ? 'bg-green-500 text-white'
+            : 'bg-red-500 text-white'
+            } flex items-center justify-between animate-slide-down`}>
+            <span className="font-medium">{scanMessage.text}</span>
+            <button
+              onClick={() => setScanMessage(null)}
+              className="ml-4 text-white hover:text-gray-200"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )
